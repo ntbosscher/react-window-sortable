@@ -4,7 +4,7 @@ import {
   FixedSizeListProps,
   ListChildComponentProps
 } from "react-window";
-import { createRef, Ref, RefObject } from "react";
+import { createRef, CSSProperties, Ref, RefObject } from "react";
 
 interface MouseEvent {
   clientY: number;
@@ -13,13 +13,17 @@ interface MouseEvent {
 export type ChildrenProps = ListChildComponentProps & {
   onSortMouseDown(e: MouseEvent): void;
   ref?: Ref<any>;
+  className?: string;
 };
 
 type Props = {
   children: React.ComponentType<ChildrenProps>;
-  onSortOrderChanged(params: { originalIndex: number; newIndex: number }): void;
   autoScrollWhenDistanceLessThan?: number;
   autoScrollSpeed?: number;
+  draggingElementClassName?: string;
+  draggingElementStyle?: CSSProperties;
+  dropElement?: any;
+  onSortOrderChanged(params: { originalIndex: number; newIndex: number }): void;
 } & Omit<FixedSizeListProps, "children">;
 
 interface State {
@@ -202,17 +206,21 @@ export class SortableList extends React.Component<Props, State> {
       background: "white"
     });
 
+    const dropElement = this.props.dropElement || (
+      <div
+        style={{
+          border: "2px dashed #0087F7",
+          borderRadius: "3px",
+          margin: "2px",
+          flex: 1,
+          boxSizing: "border-box"
+        }}
+      />
+    );
+
     return (
       <div ref={this.dropZoneRef} style={style}>
-        <div
-          style={{
-            border: "2px dashed #0087F7",
-            borderRadius: "3px",
-            margin: "2px",
-            flex: 1,
-            boxSizing: "border-box"
-          }}
-        />
+        {dropElement}
       </div>
     );
   }
@@ -243,10 +251,15 @@ export class SortableList extends React.Component<Props, State> {
     let { style, ...rest } = this.state.dragging;
     const Child = this.props.children;
 
-    style = Object.assign({}, style, {
-      boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
-      zIndex: 3
-    });
+    style = Object.assign(
+      {},
+      style,
+      {
+        boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
+        zIndex: 3
+      },
+      this.props.draggingElementStyle || {}
+    );
 
     if (!style.backgroundColor) style.backgroundColor = "white";
 
@@ -254,6 +267,7 @@ export class SortableList extends React.Component<Props, State> {
       <Child
         ref={this.dragRef}
         {...rest}
+        className={this.props.draggingElementClassName}
         style={style}
         onSortMouseDown={(e: MouseEvent) => {}}
       />

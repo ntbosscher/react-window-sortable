@@ -8,7 +8,7 @@ import {
 } from "react-window";
 import { createRef, CSSProperties, Ref, RefObject } from "react";
 
-interface MouseEvent {
+export interface MouseEvent {
   clientY: number;
 }
 

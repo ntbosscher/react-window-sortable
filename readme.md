@@ -1,10 +1,10 @@
 
 # React Window Sortable
 
-This library provides sort functionality for very large lists.
+This library provides drag and drop sort functionality for very large lists.
 
-This library wraps Brian Vaughn's excellent library [react-window](https://github.com/bvaughn/react-window)
-to hand off list virtualization.
+This library wraps Brian Vaughn's excellent library [react-window](https://github.com/bvaughn/react-window) and 
+adds drag and drop sorting.
 
 ## Features
 - Drag and drop to re-order list items

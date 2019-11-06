@@ -2,7 +2,9 @@ import * as React from "react";
 import {
   FixedSizeList,
   FixedSizeListProps,
-  ListChildComponentProps
+  ListChildComponentProps,
+  VariableSizeList,
+  VariableSizeListProps
 } from "react-window";
 import { createRef, CSSProperties, Ref, RefObject } from "react";
 
@@ -16,7 +18,7 @@ export type ChildrenProps = ListChildComponentProps & {
   className?: string;
 };
 
-type Props = {
+type Props<ListType> = {
   children: React.ComponentType<ChildrenProps>;
   autoScrollWhenDistanceLessThan?: number;
   autoScrollSpeed?: number;
@@ -24,7 +26,7 @@ type Props = {
   draggingElementStyle?: CSSProperties;
   dropElement?: any;
   onSortOrderChanged(params: { originalIndex: number; newIndex: number }): void;
-} & Omit<FixedSizeListProps, "children">;
+} & Omit<ListType, "children">;
 
 interface State {
   dragging: null | ListChildComponentProps;
@@ -32,10 +34,26 @@ interface State {
 
 type AutoScrollKeyword = "up" | "down" | "none";
 
-export class SortableList extends React.Component<Props, State> {
+interface ScrollCompatibleList {
+  scrollTo(scrollOffset: number): void;
+}
+
+export const SortableFixedSizeList = React.forwardRef(
+  (props: Props<FixedSizeListProps>, ref: Ref<any>) => {
+    const { itemSize, ...rest } = props;
+    return (
+      <SortableVariableSizeList ref={ref} itemSize={() => itemSize} {...rest} />
+    );
+  }
+);
+
+export class SortableVariableSizeList extends React.Component<
+  Props<VariableSizeListProps>,
+  State
+> {
   dragRef: RefObject<HTMLElement> = createRef();
   dropZoneRef: RefObject<HTMLDivElement> = createRef();
-  listRef: RefObject<FixedSizeList> = createRef();
+  listRef: RefObject<ScrollCompatibleList> = createRef();
 
   startClientY: number = 0;
   startDragObjOffsetY: number = 0;
@@ -108,15 +126,38 @@ export class SortableList extends React.Component<Props, State> {
     const dropRef = this.dropZoneRef.current;
     if (dropRef === null) return;
 
-    this.hoverIndex = Math.floor(newY / this.props.itemSize);
-    dropRef.style.top = this.hoverIndex * this.props.itemSize + "px";
+    const { offsetTop, index } = this.getHoverDetails(newY);
+    this.hoverIndex = index;
+    dropRef.style.top = offsetTop + "px";
   }
 
-  getScrollOffsetTop(list: FixedSizeList): number {
+  getHoverDetails(offsetY: number): { offsetTop: number; index: number } {
+    let posY = 0;
+
+    for (let i = 0; i < this.props.itemCount; i++) {
+      const height = this.props.itemSize(i);
+
+      if (offsetY < posY + height) {
+        return {
+          offsetTop: posY,
+          index: i
+        };
+      }
+
+      posY += height;
+    }
+
+    return {
+      offsetTop: posY,
+      index: this.props.itemCount - 1
+    };
+  }
+
+  getScrollOffsetTop(list: ScrollCompatibleList): number {
     return this.getScrollRef(list).scrollTop;
   }
 
-  getScrollRef(list: FixedSizeList) {
+  getScrollRef(list: ScrollCompatibleList) {
     // @ts-ignore dangerously reach into list internals, so we can get a ref on the scroll element
     return list._outerRef as HTMLDivElement;
   }
@@ -124,7 +165,7 @@ export class SortableList extends React.Component<Props, State> {
   checkAutoScroll(mouseY: number) {
     if (this.listRef.current === null) return;
 
-    const list = this.listRef.current as FixedSizeList;
+    const list = this.listRef.current as ScrollCompatibleList;
     const scrollRef = this.getScrollRef(list);
 
     const rect = scrollRef.getBoundingClientRect();
@@ -290,13 +331,13 @@ export class SortableList extends React.Component<Props, State> {
     const { children, innerElementType, ...props } = this.props;
 
     return (
-      <FixedSizeList
-        ref={this.listRef}
+      <VariableSizeList
+        ref={this.listRef as any}
         innerElementType={this.renderInnerElement()}
         {...props}
       >
         {params => this.renderChild(children, params)}
-      </FixedSizeList>
+      </VariableSizeList>
     );
   }
 }

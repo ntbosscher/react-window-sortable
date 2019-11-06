@@ -53,6 +53,7 @@ type AutoScrollKeyword = "up" | "down" | "none";
 
 interface ScrollCompatibleList {
   scrollTo(scrollOffset: number): void;
+  scrollToItem(index: number): void;
 }
 
 export const SortableFixedSizeList = React.forwardRef(

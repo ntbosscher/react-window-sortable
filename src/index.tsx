@@ -4,7 +4,7 @@ import {
   FixedSizeListProps,
   ListChildComponentProps
 } from "react-window";
-import { createRef, CSSProperties, Ref, RefObject } from "react";
+import { createRef, Ref, RefObject } from "react";
 
 interface MouseEvent {
   clientY: number;
@@ -18,18 +18,27 @@ export type ChildrenProps = ListChildComponentProps & {
 type Props = {
   children: React.ComponentType<ChildrenProps>;
   onSortOrderChanged(params: { originalIndex: number; newIndex: number }): void;
+  autoScrollWhenDistanceLessThan?: number;
+  autoScrollSpeed?: number;
 } & Omit<FixedSizeListProps, "children">;
 
 interface State {
   dragging: null | ListChildComponentProps;
 }
 
+type AutoScrollKeyword = "up" | "down" | "none";
+
 export class SortableList extends React.Component<Props, State> {
   dragRef: RefObject<HTMLElement> = createRef();
   dropZoneRef: RefObject<HTMLDivElement> = createRef();
+  listRef: RefObject<FixedSizeList> = createRef();
+
   startClientY: number = 0;
   startDragObjOffsetY: number = 0;
   hoverIndex: number | null = null;
+
+  autoScroll: AutoScrollKeyword = "none";
+  autoScrollTimer: NodeJS.Timeout | null = null;
 
   constructor(props: any) {
     super(props);
@@ -42,22 +51,31 @@ export class SortableList extends React.Component<Props, State> {
     this.onMouseMove = this.onMouseMove.bind(this);
   }
 
+  getAutoScrollWhenDistanceLessThan() {
+    return this.props.autoScrollWhenDistanceLessThan || 50;
+  }
+
+  getAutoScrollSpeed() {
+    return this.props.autoScrollSpeed || 50;
+  }
+
   componentWillUnmount(): void {
     document.body.removeEventListener("mouseup", this.onMouseUp);
     document.body.removeEventListener("mousemove", this.onMouseMove);
+    this.setAutoScroll("none", 0);
   }
 
   mouseDown(e: MouseEvent, params: ListChildComponentProps) {
     console.log("mouse down", params.index);
 
+    const list = this.listRef.current;
+    if (list === null) return;
+
     this.startClientY = e.clientY;
 
-    if (params.style.top) {
-      this.startDragObjOffsetY = parseInt(
-        params.style.top.toString() || "0",
-        10
-      );
-    }
+    const top = parseInt((params.style.top || "0").toString(), 10);
+
+    this.startDragObjOffsetY = top - this.getScrollOffsetTop(list);
 
     document.body.addEventListener("mouseup", this.onMouseUp);
     document.body.addEventListener("mousemove", this.onMouseMove);
@@ -68,11 +86,19 @@ export class SortableList extends React.Component<Props, State> {
   }
 
   onMouseMove(event: MouseEvent) {
+    this.updateDragElementPositioning(event.clientY);
+    this.checkAutoScroll(event.clientY);
+  }
+
+  updateDragElementPositioning(mouseY: number) {
     const dragRef = this.dragRef.current;
     if (dragRef === null) return;
+    if (this.listRef.current === null) return;
 
-    const dY = event.clientY - this.startClientY;
-    const newY = this.startDragObjOffsetY + dY;
+    const scrollOffsetTop = this.getScrollOffsetTop(this.listRef.current);
+
+    const dY = mouseY - this.startClientY;
+    const newY = this.startDragObjOffsetY + dY + scrollOffsetTop;
     dragRef.style.top = newY + "px";
 
     const dropRef = this.dropZoneRef.current;
@@ -82,9 +108,70 @@ export class SortableList extends React.Component<Props, State> {
     dropRef.style.top = this.hoverIndex * this.props.itemSize + "px";
   }
 
+  getScrollOffsetTop(list: FixedSizeList): number {
+    return this.getScrollRef(list).scrollTop;
+  }
+
+  getScrollRef(list: FixedSizeList) {
+    // @ts-ignore dangerously reach into list internals, so we can get a ref on the scroll element
+    return list._outerRef as HTMLDivElement;
+  }
+
+  checkAutoScroll(mouseY: number) {
+    if (this.listRef.current === null) return;
+
+    const list = this.listRef.current as FixedSizeList;
+    const scrollRef = this.getScrollRef(list);
+
+    const rect = scrollRef.getBoundingClientRect();
+    const listTop = rect.y;
+    const listBottom = rect.y + rect.height;
+
+    const buffer = this.getAutoScrollWhenDistanceLessThan();
+
+    if (mouseY - listTop < buffer) {
+      this.setAutoScroll("up", mouseY);
+    } else if (listBottom - mouseY < this.getAutoScrollWhenDistanceLessThan()) {
+      this.setAutoScroll("down", mouseY);
+    } else {
+      this.setAutoScroll("none", mouseY);
+    }
+  }
+
+  setAutoScroll(scroll: AutoScrollKeyword, mouseY: number) {
+    if (this.autoScrollTimer !== null) {
+      clearInterval(this.autoScrollTimer);
+      this.autoScrollTimer = null;
+    }
+
+    this.autoScroll = scroll;
+
+    if (scroll === "none") return;
+
+    if (this.dragRef.current === null) return;
+    if (this.listRef.current === null) return;
+
+    let delta = this.getAutoScrollSpeed();
+    if (scroll === "up") {
+      delta = delta * -1;
+    }
+
+    this.autoScrollTimer = setInterval((e: any) => {
+      if (this.listRef.current === null) return;
+
+      const offsetTop = this.getScrollOffsetTop(this.listRef.current);
+      const newOffsetTop = offsetTop + delta;
+      this.listRef.current.scrollTo(newOffsetTop);
+
+      this.updateDragElementPositioning(mouseY);
+    }, 100);
+  }
+
   onMouseUp() {
     document.body.removeEventListener("mouseup", this.onMouseUp);
     document.body.removeEventListener("mousemove", this.onMouseMove);
+
+    this.setAutoScroll("none", 0);
 
     if (this.state.dragging === null) return;
 
@@ -189,7 +276,11 @@ export class SortableList extends React.Component<Props, State> {
     const { children, innerElementType, ...props } = this.props;
 
     return (
-      <FixedSizeList innerElementType={this.renderInnerElement()} {...props}>
+      <FixedSizeList
+        ref={this.listRef}
+        innerElementType={this.renderInnerElement()}
+        {...props}
+      >
         {params => this.renderChild(children, params)}
       </FixedSizeList>
     );

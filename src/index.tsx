@@ -19,12 +19,29 @@ export type ChildrenProps = ListChildComponentProps & {
 };
 
 type Props<ListType> = {
+  // a render function to render list items
   children: React.ComponentType<ChildrenProps>;
+
+  // the distance from the top or bottom of the scroll
+  // window where autoscroll should kick in
   autoScrollWhenDistanceLessThan?: number;
+
+  // the speed at which the autoscroll should go
   autoScrollSpeed?: number;
+
+  // set the class name for the element that is being
+  // moved by the cursor
   draggingElementClassName?: string;
+
+  // set override styles on the style prop for the element
+  // being moved by the cursor
   draggingElementStyle?: CSSProperties;
+
+  // a custom element to render as a spot where the dragged
+  // element can be dropped.
   dropElement?: any;
+
+  // a callback when a sort has completed
   onSortOrderChanged(params: { originalIndex: number; newIndex: number }): void;
 } & Omit<ListType, "children">;
 

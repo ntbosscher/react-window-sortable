@@ -334,12 +334,28 @@ export class SortableVariableSizeList extends React.Component<
   }
 
   renderInnerElement() {
+    const InnerElement = this.props.innerElementType;
+
     return React.forwardRef(({ children, ...rest }, ref: Ref<any>) => {
-      return (
-        <div {...rest} ref={ref}>
+      const inner = (
+        <React.Fragment>
           {children}
           {this.renderDraggingElement()}
           {this.renderDropZoneElement()}
+        </React.Fragment>
+      );
+
+      if (InnerElement) {
+        return (
+          <InnerElement {...rest} ref={ref}>
+            {inner}
+          </InnerElement>
+        );
+      }
+
+      return (
+        <div {...rest} ref={ref}>
+          {inner}
         </div>
       );
     });

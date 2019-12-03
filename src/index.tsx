@@ -4,7 +4,8 @@ import {
   FixedSizeListProps,
   ListChildComponentProps,
   VariableSizeList,
-  VariableSizeListProps
+  VariableSizeListProps,
+  Align
 } from "react-window";
 import { createRef, CSSProperties, Ref, RefObject } from "react";
 
@@ -53,7 +54,7 @@ type AutoScrollKeyword = "up" | "down" | "none";
 
 interface ScrollCompatibleList {
   scrollTo(scrollOffset: number): void;
-  scrollToItem(index: number): void;
+  scrollToItem(index: number, align?: Align): void;
 }
 
 export const SortableFixedSizeList = React.forwardRef(

@@ -1,12 +1,16 @@
 import * as React from "react";
 import {
-  FixedSizeList,
   FixedSizeListProps,
   ListChildComponentProps,
   VariableSizeList,
-  VariableSizeListProps
+  VariableSizeListProps,
+  Align,
+  ListItemKeySelector,
+  ReactElementType
 } from "react-window";
 import { createRef, CSSProperties, Ref, RefObject } from "react";
+import { Child } from "./Child";
+import { InnerElementType } from "./InnerElementType";
 
 export interface MouseEvent {
   clientY: number;
@@ -43,6 +47,8 @@ type Props<ListType> = {
 
   // a callback when a sort has completed
   onSortOrderChanged(params: { originalIndex: number; newIndex: number }): void;
+
+  itemKey?: ListItemKeySelector;
 } & Omit<ListType, "children">;
 
 interface State {
@@ -53,7 +59,7 @@ type AutoScrollKeyword = "up" | "down" | "none";
 
 interface ScrollCompatibleList {
   scrollTo(scrollOffset: number): void;
-  scrollToItem(index: number): void;
+  scrollToItem(index: number, align?: Align): void;
 }
 
 export const SortableFixedSizeList = React.forwardRef(
@@ -64,6 +70,8 @@ export const SortableFixedSizeList = React.forwardRef(
     );
   }
 );
+
+type Timeout = any;
 
 export class SortableVariableSizeList extends React.Component<
   Props<VariableSizeListProps>,
@@ -78,7 +86,7 @@ export class SortableVariableSizeList extends React.Component<
   hoverIndex: number | null = null;
 
   autoScroll: AutoScrollKeyword = "none";
-  autoScrollTimer: NodeJS.Timeout | null = null;
+  autoScrollTimer: Timeout | null = null;
 
   constructor(props: any) {
     super(props);
@@ -89,6 +97,7 @@ export class SortableVariableSizeList extends React.Component<
 
     this.onMouseUp = this.onMouseUp.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
+    this.mouseDown = this.mouseDown.bind(this);
   }
 
   getAutoScrollWhenDistanceLessThan() {
@@ -186,7 +195,7 @@ export class SortableVariableSizeList extends React.Component<
     const list = this.listRef.current as ScrollCompatibleList;
     const scrollRef = this.getScrollRef(list);
 
-    const rect = scrollRef.getBoundingClientRect();
+    const rect = scrollRef.getBoundingClientRect() as DOMRect;
     const listTop = rect.y;
     const listBottom = rect.y + rect.height;
 
@@ -284,26 +293,6 @@ export class SortableVariableSizeList extends React.Component<
     );
   }
 
-  renderChild(
-    Child: React.ComponentType<ChildrenProps>,
-    params: ListChildComponentProps
-  ) {
-    let { style, index, ...rest } = params;
-
-    if (this.state.dragging !== null && index === this.state.dragging.index) {
-      return null;
-    }
-
-    return (
-      <Child
-        {...rest}
-        style={style}
-        index={index}
-        onSortMouseDown={(e: MouseEvent) => this.mouseDown(e, params)}
-      />
-    );
-  }
-
   renderDraggingElement() {
     if (this.state.dragging === null) return null;
 
@@ -361,17 +350,97 @@ export class SortableVariableSizeList extends React.Component<
     });
   }
 
+  sortableContext: ISortableContext = {
+    Child: this.props.children,
+    itemKey: this.props.itemKey,
+    onMouseDown: this.mouseDown.bind(this)
+  };
+
+  getSortableContext() {
+    const value = {
+      Child: this.props.children,
+      itemKey: this.props.itemKey,
+      onMouseDown: this.mouseDown
+    };
+
+    if (value.Child === this.sortableContext.Child) {
+      if (value.itemKey === this.sortableContext.itemKey) {
+        return this.sortableContext;
+      }
+    }
+
+    this.sortableContext = value;
+    return this.sortableContext;
+  }
+
+  dragContext: IDragContext | null = null;
+
+  getDragContext() {
+    if (!this.state.dragging) return null;
+
+    var value: IDragContext = {
+      dragging: this.state.dragging,
+      dragRef: this.dragRef,
+      dropZoneRef: this.dropZoneRef,
+      Child: this.props.children
+    };
+
+    if (
+      this.dragContext === null ||
+      this.dragContext.dragging !== value.dragging ||
+      this.dragContext.Child !== value.Child
+    ) {
+      this.dragContext = value;
+    }
+
+    return this.dragContext;
+  }
+
   render() {
     const { children, innerElementType, ...props } = this.props;
 
     return (
-      <VariableSizeList
-        ref={this.listRef as any}
-        innerElementType={this.renderInnerElement()}
-        {...props}
-      >
-        {params => this.renderChild(children, params)}
-      </VariableSizeList>
+      <SortableContext.Provider value={this.getSortableContext()}>
+        <InnerElementContext.Provider value={this.props.innerElementType}>
+          <DragContext.Provider value={this.getDragContext()}>
+            <VariableSizeList
+              ref={this.listRef as any}
+              innerElementType={InnerElementType}
+              {...props}
+            >
+              {Child}
+            </VariableSizeList>
+          </DragContext.Provider>
+        </InnerElementContext.Provider>
+      </SortableContext.Provider>
     );
   }
 }
+
+interface ISortableContext {
+  Child: React.ComponentType<ChildrenProps>;
+  itemKey?: ListItemKeySelector;
+  onMouseDown(e: MouseEvent, params: ListChildComponentProps): void;
+}
+
+export const SortableContext = React.createContext<ISortableContext>({
+  Child: () => <div />,
+  onMouseDown: () => {},
+  itemKey: undefined
+});
+
+interface IDragContext {
+  dragging: ListChildComponentProps;
+  dragRef: Ref<HTMLElement>;
+  dropZoneRef: Ref<HTMLDivElement>;
+  draggingElementClassName?: string;
+  draggingElementStyle?: CSSProperties;
+  dropElement?: any;
+  Child: React.ComponentType<ChildrenProps>;
+}
+
+export const DragContext = React.createContext<IDragContext | null>(null);
+
+export const InnerElementContext = React.createContext<
+  ReactElementType | undefined
+>(undefined);

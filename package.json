@@ -1,8 +1,7 @@
 {
   "name": "react-window-sortable",
-  "version": "1.4.0",
-  "description":
-    "React Window Sortable is an HOC for react-window that allows drag and drop sorting of lists",
+  "version": "1.4.1",
+  "description": "React Window Sortable is an HOC for react-window that allows drag and drop sorting of lists",
   "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,7 +12,14 @@
     "type": "git",
     "url": "git+https://github.com/ntbosscher/react-window-sortable.git"
   },
-  "keywords": ["react", "window", "sortable", "large", "list", "virtualize"],
+  "keywords": [
+    "react",
+    "window",
+    "sortable",
+    "large",
+    "list",
+    "virtualize"
+  ],
   "author": "Nate Bosscher",
   "license": "ISC",
   "bugs": {

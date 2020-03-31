@@ -4,9 +4,9 @@ import {
   ListChildComponentProps,
   VariableSizeList,
   VariableSizeListProps,
-  Align,
   ListItemKeySelector,
-  ReactElementType
+  ReactElementType,
+  Align
 } from "react-window";
 import { createRef, CSSProperties, Ref, RefObject } from "react";
 import { Child } from "./Child";

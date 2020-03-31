@@ -32,9 +32,9 @@
   "homepage": "https://github.com/ntbosscher/react-window-sortable#readme",
   "dependencies": {
     "@types/node": "12.12.6",
-    "@types/react": "16.9.11",
+    "@types/react": "^16.9.30",
     "@types/react-window": "^1.8.1",
-    "react": "^16.11.0",
+    "react": "^16.13.1",
     "react-window": "^1.8.5",
     "typescript": "3.7.2"
   }

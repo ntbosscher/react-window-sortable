@@ -15,8 +15,8 @@
     "isolatedModules": true,
     "noEmit": false,
     "jsx": "react",
-    "outDir": "./build"
+    "outDir": "./dist"
   },
   "include": ["src/**/*.tsx"],
-  "exclude": ["node_modules", "build"]
+  "exclude": ["node_modules", "dist"]
 }

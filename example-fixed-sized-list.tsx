@@ -4,7 +4,7 @@ import "./App.css";
 import {
   ChildrenProps,
   SortableFixedSizeList,
-  SortableVariableSizeList
+  SortableVariableSizeList,
 } from "./src";
 
 const data: any[] = [];
@@ -25,7 +25,7 @@ class App extends React.Component<{}, State> {
     super(props);
 
     this.state = {
-      data: data
+      data: data,
     };
   }
 
@@ -43,7 +43,7 @@ class App extends React.Component<{}, State> {
               onSortOrderChanged={({ originalIndex, newIndex }) => {
                 move(this.state.data, originalIndex, newIndex);
                 this.setState({
-                  data: this.state.data.slice(0)
+                  data: this.state.data.slice(0),
                 });
               }}
             >

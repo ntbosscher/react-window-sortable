@@ -1,6 +1,6 @@
 {
   "name": "react-window-sortable",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "React Window Sortable is an HOC for react-window that allows drag and drop sorting of lists",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@types/node": "12.12.6",
-    "@types/react": "^16.9.30",
+    "@types/react": "^16.9.35",
     "@types/react-window": "^1.8.1",
     "react": "^16.13.1",
     "react-window": "^1.8.5",

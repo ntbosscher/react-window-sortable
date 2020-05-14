@@ -9,7 +9,7 @@ export function Child(props: ListChildComponentProps) {
   const { onMouseDown } = sortable;
   const mouseDown = useCallback((e: MouseEvent) => onMouseDown(e, props), [
     props,
-    onMouseDown
+    onMouseDown,
   ]);
   const drag = useContext(DragContext);
 
@@ -21,12 +21,12 @@ export function Child(props: ListChildComponentProps) {
   if (sortable.itemKey) key = sortable.itemKey(props.index, props.data);
 
   return (
-      <sortable.Child
-          {...rest}
-          key={key}
-          style={style}
-          index={index}
-          onSortMouseDown={mouseDown}
-      />
+    <sortable.Child
+      {...rest}
+      key={key}
+      style={style}
+      index={index}
+      onSortMouseDown={mouseDown}
+    />
   );
 }

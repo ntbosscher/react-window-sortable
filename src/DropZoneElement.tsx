@@ -10,7 +10,7 @@ export function DropZoneElement() {
     flexDirection: "row",
     alignItems: "stretch",
     zIndex: 2,
-    background: "white"
+    background: "white",
   });
 
   const dropElement = drag.dropElement || (
@@ -20,7 +20,7 @@ export function DropZoneElement() {
         borderRadius: "3px",
         margin: "2px",
         flex: 1,
-        boxSizing: "border-box"
+        boxSizing: "border-box",
       }}
     />
   );

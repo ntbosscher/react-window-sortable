@@ -6,11 +6,12 @@ import {
   VariableSizeListProps,
   ListItemKeySelector,
   ReactElementType,
-  Align
+  Align,
 } from "react-window";
-import { createRef, CSSProperties, Ref, RefObject } from "react";
+import {createRef, CSSProperties, Ref, RefObject, useContext} from "react";
 import { Child } from "./Child";
-import { InnerElementType } from "./InnerElementType";
+import {DraggingElement} from "./DraggingElement";
+import {DropZoneElement} from "./DropZoneElement";
 
 export interface MouseEvent {
   clientY: number;
@@ -22,7 +23,7 @@ export type ChildrenProps = ListChildComponentProps & {
   className?: string;
 };
 
-type Props<ListType> = {
+export type Props<ListType> = {
   // a render function to render list items
   children: React.ComponentType<ChildrenProps>;
 
@@ -51,32 +52,32 @@ type Props<ListType> = {
   itemKey?: ListItemKeySelector;
 } & Omit<ListType, "children">;
 
-interface State {
+export interface State {
   dragging: null | ListChildComponentProps;
 }
 
-type AutoScrollKeyword = "up" | "down" | "none";
+export type AutoScrollKeyword = "up" | "down" | "none";
 
-interface ScrollCompatibleList {
+export interface ScrollCompatibleList {
   scrollTo(scrollOffset: number): void;
   scrollToItem(index: number, align?: Align): void;
 }
 
 export const SortableFixedSizeList = React.forwardRef(
-    (props: Props<FixedSizeListProps>, ref: Ref<any>) => {
-      const { itemSize, ...rest } = props;
-      return (
-          <SortableVariableSizeList ref={ref} itemSize={() => itemSize} {...rest} />
-      );
-    }
+  (props: Props<FixedSizeListProps>, ref: Ref<any>) => {
+    const { itemSize, ...rest } = props;
+    return (
+      <SortableVariableSizeList ref={ref} itemSize={() => itemSize} {...rest} />
+    );
+  }
 );
 
-type Timeout = any;
+export type Timeout = any;
 
 export class SortableVariableSizeList extends React.Component<
-    Props<VariableSizeListProps>,
-    State
-    > {
+  Props<VariableSizeListProps>,
+  State
+> {
   dragRef: RefObject<HTMLElement> = createRef();
   dropZoneRef: RefObject<HTMLDivElement> = createRef();
   listRef: RefObject<ScrollCompatibleList> = createRef();
@@ -92,7 +93,7 @@ export class SortableVariableSizeList extends React.Component<
     super(props);
 
     this.state = {
-      dragging: null
+      dragging: null,
     };
 
     this.onMouseUp = this.onMouseUp.bind(this);
@@ -130,7 +131,7 @@ export class SortableVariableSizeList extends React.Component<
     document.body.addEventListener("mousemove", this.onMouseMove);
 
     this.setState({
-      dragging: params
+      dragging: params,
     });
   }
 
@@ -167,7 +168,7 @@ export class SortableVariableSizeList extends React.Component<
       if (offsetY < posY + height) {
         return {
           offsetTop: posY,
-          index: i
+          index: i,
         };
       }
 
@@ -176,7 +177,7 @@ export class SortableVariableSizeList extends React.Component<
 
     return {
       offsetTop: posY,
-      index: this.props.itemCount - 1
+      index: this.props.itemCount - 1,
     };
   }
 
@@ -250,18 +251,18 @@ export class SortableVariableSizeList extends React.Component<
     const startIndex = this.state.dragging.index;
 
     this.setState({
-      dragging: null
+      dragging: null,
     });
 
     if (this.hoverIndex !== null) {
       let newIndex = this.hoverIndex;
-      if(newIndex > startIndex) {
-        newIndex = Math.max(0, newIndex-1);
+      if (newIndex > startIndex) {
+        newIndex = Math.max(0, newIndex - 1);
       }
 
       this.props.onSortOrderChanged({
         originalIndex: startIndex,
-        newIndex: newIndex
+        newIndex: newIndex,
       });
     }
 
@@ -276,25 +277,25 @@ export class SortableVariableSizeList extends React.Component<
       flexDirection: "row",
       alignItems: "stretch",
       zIndex: 2,
-      background: "white"
+      background: "white",
     });
 
     const dropElement = this.props.dropElement || (
-        <div
-            style={{
-              border: "2px dashed #0087F7",
-              borderRadius: "3px",
-              margin: "2px",
-              flex: 1,
-              boxSizing: "border-box"
-            }}
-        />
+      <div
+        style={{
+          border: "2px dashed #0087F7",
+          borderRadius: "3px",
+          margin: "2px",
+          flex: 1,
+          boxSizing: "border-box",
+        }}
+      />
     );
 
     return (
-        <div ref={this.dropZoneRef} style={style}>
-          {dropElement}
-        </div>
+      <div ref={this.dropZoneRef} style={style}>
+        {dropElement}
+      </div>
     );
   }
 
@@ -305,25 +306,25 @@ export class SortableVariableSizeList extends React.Component<
     const Child = this.props.children;
 
     style = Object.assign(
-        {},
-        style,
-        {
-          boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
-          zIndex: 3
-        },
-        this.props.draggingElementStyle || {}
+      {},
+      style,
+      {
+        boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
+        zIndex: 3,
+      },
+      this.props.draggingElementStyle || {}
     );
 
     if (!style.backgroundColor) style.backgroundColor = "white";
 
     return (
-        <Child
-            ref={this.dragRef}
-            {...rest}
-            className={this.props.draggingElementClassName}
-            style={style}
-            onSortMouseDown={(e: MouseEvent) => {}}
-        />
+      <Child
+        ref={this.dragRef}
+        {...rest}
+        className={this.props.draggingElementClassName}
+        style={style}
+        onSortMouseDown={(e: MouseEvent) => {}}
+      />
     );
   }
 
@@ -332,25 +333,25 @@ export class SortableVariableSizeList extends React.Component<
 
     return React.forwardRef(({ children, ...rest }, ref: Ref<any>) => {
       const inner = (
-          <React.Fragment>
-            {children}
-            {this.renderDraggingElement()}
-            {this.renderDropZoneElement()}
-          </React.Fragment>
+        <React.Fragment>
+          {children}
+          {this.renderDraggingElement()}
+          {this.renderDropZoneElement()}
+        </React.Fragment>
       );
 
       if (InnerElement) {
         return (
-            <InnerElement {...rest} ref={ref}>
-              {inner}
-            </InnerElement>
+          <InnerElement {...rest} ref={ref}>
+            {inner}
+          </InnerElement>
         );
       }
 
       return (
-          <div {...rest} ref={ref}>
-            {inner}
-          </div>
+        <div {...rest} ref={ref}>
+          {inner}
+        </div>
       );
     });
   }
@@ -358,14 +359,14 @@ export class SortableVariableSizeList extends React.Component<
   sortableContext: ISortableContext = {
     Child: this.props.children,
     itemKey: this.props.itemKey,
-    onMouseDown: this.mouseDown.bind(this)
+    onMouseDown: this.mouseDown.bind(this),
   };
 
   getSortableContext() {
     const value = {
       Child: this.props.children,
       itemKey: this.props.itemKey,
-      onMouseDown: this.mouseDown
+      onMouseDown: this.mouseDown,
     };
 
     if (value.Child === this.sortableContext.Child) {
@@ -387,13 +388,13 @@ export class SortableVariableSizeList extends React.Component<
       dragging: this.state.dragging,
       dragRef: this.dragRef,
       dropZoneRef: this.dropZoneRef,
-      Child: this.props.children
+      Child: this.props.children,
     };
 
     if (
-        this.dragContext === null ||
-        this.dragContext.dragging !== value.dragging ||
-        this.dragContext.Child !== value.Child
+      this.dragContext === null ||
+      this.dragContext.dragging !== value.dragging ||
+      this.dragContext.Child !== value.Child
     ) {
       this.dragContext = value;
     }
@@ -405,24 +406,24 @@ export class SortableVariableSizeList extends React.Component<
     const { children, innerElementType, ...props } = this.props;
 
     return (
-        <SortableContext.Provider value={this.getSortableContext()}>
-          <InnerElementContext.Provider value={this.props.innerElementType}>
-            <DragContext.Provider value={this.getDragContext()}>
-              <VariableSizeList
-                  ref={this.listRef as any}
-                  innerElementType={InnerElementType}
-                  {...props}
-              >
-                {Child}
-              </VariableSizeList>
-            </DragContext.Provider>
-          </InnerElementContext.Provider>
-        </SortableContext.Provider>
+      <SortableContext.Provider value={this.getSortableContext()}>
+        <InnerElementContext.Provider value={this.props.innerElementType}>
+          <DragContext.Provider value={this.getDragContext()}>
+            <VariableSizeList
+              ref={this.listRef as any}
+              innerElementType={InnerElementType}
+              {...props}
+            >
+              {Child}
+            </VariableSizeList>
+          </DragContext.Provider>
+        </InnerElementContext.Provider>
+      </SortableContext.Provider>
     );
   }
 }
 
-interface ISortableContext {
+export interface ISortableContext {
   Child: React.ComponentType<ChildrenProps>;
   itemKey?: ListItemKeySelector;
   onMouseDown(e: MouseEvent, params: ListChildComponentProps): void;
@@ -431,10 +432,10 @@ interface ISortableContext {
 export const SortableContext = React.createContext<ISortableContext>({
   Child: () => <div />,
   onMouseDown: () => {},
-  itemKey: undefined
+  itemKey: undefined,
 });
 
-interface IDragContext {
+export interface IDragContext {
   dragging: ListChildComponentProps;
   dragRef: Ref<HTMLElement>;
   dropZoneRef: Ref<HTMLDivElement>;
@@ -446,6 +447,25 @@ interface IDragContext {
 
 export const DragContext = React.createContext<IDragContext | null>(null);
 
-export const InnerElementContext = React.createContext<
-    ReactElementType | undefined
-    >(undefined);
+const InnerElementContext = React.createContext<
+  ReactElementType | undefined
+>(undefined);
+
+function InnerElementType(props: { children: any }) {
+  const { children, ...rest } = props;
+  const InnerElement = useContext(InnerElementContext);
+
+  const inner = (
+      <React.Fragment>
+        {children}
+        <DraggingElement />
+        <DropZoneElement />
+      </React.Fragment>
+  );
+
+  if (InnerElement) {
+    return <InnerElement {...rest}>{inner}</InnerElement>;
+  }
+
+  return <div {...rest}>{inner}</div>;
+}

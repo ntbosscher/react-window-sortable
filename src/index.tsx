@@ -63,20 +63,20 @@ interface ScrollCompatibleList {
 }
 
 export const SortableFixedSizeList = React.forwardRef(
-  (props: Props<FixedSizeListProps>, ref: Ref<any>) => {
-    const { itemSize, ...rest } = props;
-    return (
-      <SortableVariableSizeList ref={ref} itemSize={() => itemSize} {...rest} />
-    );
-  }
+    (props: Props<FixedSizeListProps>, ref: Ref<any>) => {
+      const { itemSize, ...rest } = props;
+      return (
+          <SortableVariableSizeList ref={ref} itemSize={() => itemSize} {...rest} />
+      );
+    }
 );
 
 type Timeout = any;
 
 export class SortableVariableSizeList extends React.Component<
-  Props<VariableSizeListProps>,
-  State
-> {
+    Props<VariableSizeListProps>,
+    State
+    > {
   dragRef: RefObject<HTMLElement> = createRef();
   dropZoneRef: RefObject<HTMLDivElement> = createRef();
   listRef: RefObject<ScrollCompatibleList> = createRef();
@@ -254,9 +254,14 @@ export class SortableVariableSizeList extends React.Component<
     });
 
     if (this.hoverIndex !== null) {
+      let newIndex = this.hoverIndex;
+      if(newIndex > startIndex) {
+        newIndex = Math.max(0, newIndex-1);
+      }
+
       this.props.onSortOrderChanged({
         originalIndex: startIndex,
-        newIndex: this.hoverIndex
+        newIndex: newIndex
       });
     }
 
@@ -275,21 +280,21 @@ export class SortableVariableSizeList extends React.Component<
     });
 
     const dropElement = this.props.dropElement || (
-      <div
-        style={{
-          border: "2px dashed #0087F7",
-          borderRadius: "3px",
-          margin: "2px",
-          flex: 1,
-          boxSizing: "border-box"
-        }}
-      />
+        <div
+            style={{
+              border: "2px dashed #0087F7",
+              borderRadius: "3px",
+              margin: "2px",
+              flex: 1,
+              boxSizing: "border-box"
+            }}
+        />
     );
 
     return (
-      <div ref={this.dropZoneRef} style={style}>
-        {dropElement}
-      </div>
+        <div ref={this.dropZoneRef} style={style}>
+          {dropElement}
+        </div>
     );
   }
 
@@ -300,25 +305,25 @@ export class SortableVariableSizeList extends React.Component<
     const Child = this.props.children;
 
     style = Object.assign(
-      {},
-      style,
-      {
-        boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
-        zIndex: 3
-      },
-      this.props.draggingElementStyle || {}
+        {},
+        style,
+        {
+          boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
+          zIndex: 3
+        },
+        this.props.draggingElementStyle || {}
     );
 
     if (!style.backgroundColor) style.backgroundColor = "white";
 
     return (
-      <Child
-        ref={this.dragRef}
-        {...rest}
-        className={this.props.draggingElementClassName}
-        style={style}
-        onSortMouseDown={(e: MouseEvent) => {}}
-      />
+        <Child
+            ref={this.dragRef}
+            {...rest}
+            className={this.props.draggingElementClassName}
+            style={style}
+            onSortMouseDown={(e: MouseEvent) => {}}
+        />
     );
   }
 
@@ -327,25 +332,25 @@ export class SortableVariableSizeList extends React.Component<
 
     return React.forwardRef(({ children, ...rest }, ref: Ref<any>) => {
       const inner = (
-        <React.Fragment>
-          {children}
-          {this.renderDraggingElement()}
-          {this.renderDropZoneElement()}
-        </React.Fragment>
+          <React.Fragment>
+            {children}
+            {this.renderDraggingElement()}
+            {this.renderDropZoneElement()}
+          </React.Fragment>
       );
 
       if (InnerElement) {
         return (
-          <InnerElement {...rest} ref={ref}>
-            {inner}
-          </InnerElement>
+            <InnerElement {...rest} ref={ref}>
+              {inner}
+            </InnerElement>
         );
       }
 
       return (
-        <div {...rest} ref={ref}>
-          {inner}
-        </div>
+          <div {...rest} ref={ref}>
+            {inner}
+          </div>
       );
     });
   }
@@ -386,9 +391,9 @@ export class SortableVariableSizeList extends React.Component<
     };
 
     if (
-      this.dragContext === null ||
-      this.dragContext.dragging !== value.dragging ||
-      this.dragContext.Child !== value.Child
+        this.dragContext === null ||
+        this.dragContext.dragging !== value.dragging ||
+        this.dragContext.Child !== value.Child
     ) {
       this.dragContext = value;
     }
@@ -400,19 +405,19 @@ export class SortableVariableSizeList extends React.Component<
     const { children, innerElementType, ...props } = this.props;
 
     return (
-      <SortableContext.Provider value={this.getSortableContext()}>
-        <InnerElementContext.Provider value={this.props.innerElementType}>
-          <DragContext.Provider value={this.getDragContext()}>
-            <VariableSizeList
-              ref={this.listRef as any}
-              innerElementType={InnerElementType}
-              {...props}
-            >
-              {Child}
-            </VariableSizeList>
-          </DragContext.Provider>
-        </InnerElementContext.Provider>
-      </SortableContext.Provider>
+        <SortableContext.Provider value={this.getSortableContext()}>
+          <InnerElementContext.Provider value={this.props.innerElementType}>
+            <DragContext.Provider value={this.getDragContext()}>
+              <VariableSizeList
+                  ref={this.listRef as any}
+                  innerElementType={InnerElementType}
+                  {...props}
+              >
+                {Child}
+              </VariableSizeList>
+            </DragContext.Provider>
+          </InnerElementContext.Provider>
+        </SortableContext.Provider>
     );
   }
 }
@@ -442,5 +447,5 @@ interface IDragContext {
 export const DragContext = React.createContext<IDragContext | null>(null);
 
 export const InnerElementContext = React.createContext<
-  ReactElementType | undefined
->(undefined);
+    ReactElementType | undefined
+    >(undefined);

@@ -177,7 +177,7 @@ export class SortableVariableSizeList extends React.Component<
 
     return {
       offsetTop: posY,
-      index: this.props.itemCount - 1,
+      index: this.props.itemCount,
     };
   }
 

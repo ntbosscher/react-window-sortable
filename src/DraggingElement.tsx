@@ -1,7 +1,6 @@
-import { default as React, useContext } from "react";
+import {default as React, useContext, useMemo} from "react";
 import { DragContext } from "./index";
-
-function emptyCallback() {}
+import {emptyCallback} from "./util";
 
 export function DraggingElement() {
   const drag = useContext(DragContext);
@@ -16,6 +15,7 @@ export function DraggingElement() {
     {
       boxShadow: "1px 1px 5px 0px hsla(0, 0%, 0%, 0.31)",
       zIndex: 3,
+      opacity: 0.5,
     },
     drag.draggingElementStyle || {}
   );

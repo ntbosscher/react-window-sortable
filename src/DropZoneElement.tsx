@@ -10,15 +10,14 @@ export function DropZoneElement() {
     flexDirection: "row",
     alignItems: "stretch",
     zIndex: 2,
-    background: "white",
   });
 
   const dropElement = drag.dropElement || (
     <div
       style={{
-        border: "2px dashed #0087F7",
-        borderRadius: "3px",
-        margin: "2px",
+        borderTop: "2px dashed #0087F7",
+        marginLeft: "2px",
+        marginRight: "2px",
         flex: 1,
         boxSizing: "border-box",
       }}

@@ -165,7 +165,7 @@ export class SortableVariableSizeList extends React.Component<
     for (let i = 0; i < this.props.itemCount; i++) {
       const height = this.props.itemSize(i);
 
-      if (offsetY < posY + height) {
+      if (offsetY < posY + height/2) {
         return {
           offsetTop: posY,
           index: i,

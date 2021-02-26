@@ -116,8 +116,6 @@ export class SortableVariableSizeList extends React.Component<
   }
 
   mouseDown(e: MouseEvent, params: ListChildComponentProps) {
-    console.log("mouse down", params.index);
-
     const list = this.listRef.current;
     if (list === null) return;
 
